@@ -1,0 +1,18 @@
+{
+  "name": "job-search-cli",
+  "version": "1.0.0",
+  "description": "AI-powered job application toolkit built on Claude Code. Generates tailored resumes, cover letters, and DOCX files from a master reference document.",
+  "license": "MIT",
+  "keywords": [
+    "job-search",
+    "resume",
+    "cover-letter",
+    "ats",
+    "claude-code",
+    "ai",
+    "docx"
+  ],
+  "dependencies": {
+    "docx": "^9.6.1"
+  }
+}

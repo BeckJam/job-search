@@ -1,0 +1,27 @@
+# Personal application folders (contain resumes and cover letters)
+2*_*_*/
+
+# User configuration (contains personal info)
+config.md
+
+# User's master reference (contains career history)
+master-reference.md
+
+# Node
+node_modules/
+package-lock.json
+
+# Claude Code local settings and memory
+.claude/settings.local.json
+.claude/projects/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+
+# Generated DOCX files outside application folders
+*.docx
