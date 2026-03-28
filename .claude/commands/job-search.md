@@ -74,7 +74,17 @@ When passing context to writing agents, always include:
 
 ## Workflow: New Job Application
 
-When the user provides a new job description, follow these phases in order.
+When the user provides a new job description (or a URL to one), follow these phases in order.
+
+### URL Detection
+
+If the user provides a URL instead of (or along with) job description text:
+
+1. Run `node scripts/scrape-jd.js "<url>"` via the Bash tool
+2. The script extracts the main content from the page using Mozilla's Readability algorithm
+3. Present the extracted job title and first few lines to the user for confirmation: "I scraped this JD from the URL — does this look right?"
+4. If the user confirms, use the extracted text as the job description for all subsequent phases
+5. If scraping fails (network error, login-walled page, no readable content), ask the user to paste the JD text manually
 
 ### Phase 2: Parallel Analysis
 
@@ -129,6 +139,8 @@ Rules:
 - Use today's date
 - Sanitize company name and job title: spaces become hyphens, remove special characters
 - Example: `2026-03-26_Acme-Corp_Senior-Software-Engineer`
+
+After creating the folder, save the full job description text as `jd.txt` in the application folder. This preserves the original JD for future reference.
 
 ### Phase 5: Document Generation (Sequential)
 

@@ -41,7 +41,7 @@ On first run, the onboarding flow will:
 
 **Before your first application**, fill in your master reference with your career history, STAR projects, and skills. See `templates/example-master-reference.md` for a detailed example.
 
-Then run `/job-search` again and paste a job description to generate your first application.
+Then run `/job-search` again and either paste a job description or provide a URL to the job posting. The scraper automatically extracts JD content from most job board URLs (Greenhouse, Lever, Workday, etc.).
 
 ## How It Works
 
@@ -53,6 +53,9 @@ Phase 0: Config check (first-run onboarding if needed)
     |
     v
 Phase 1: Load master reference
+    |
+    v
+URL detection: If URL provided, scrape JD text automatically
     |
     v
 Phase 2: ATS keyword analysis + company research (parallel)
@@ -112,6 +115,14 @@ Beyond the main application workflow, you can ask for:
 - **Workday Formatter**: "Format the resume for Workday fields"
 
 ## Standalone Scripts
+
+### JD Scraper
+
+```bash
+node scripts/scrape-jd.js "https://boards.greenhouse.io/company/jobs/12345"
+```
+
+Extracts job description text from a URL using Mozilla's Readability algorithm (the same one behind Firefox Reader View). Works with most job boards: Greenhouse, Lever, Workday, company career pages, etc. Pages that require JavaScript rendering or login may not work.
 
 ### DOCX Generator
 
