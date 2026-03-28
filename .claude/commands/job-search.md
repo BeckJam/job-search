@@ -33,14 +33,27 @@ Before anything else, check if `config.md` exists in the project root.
    - LinkedIn URL (just the path, e.g., `linkedin.com/in/yourprofile`)
    - City and state (e.g., "Seattle, WA")
    - Where they want to store their master reference file (suggest `./master-reference.md` as default)
-4. Ask the user for their identity framing: "In 1-2 sentences, how would you describe yourself professionally? This anchors every cover letter and resume headline."
-5. Create `config.md` in the project root, populated with the user's answers and the defaults from the example.
-6. Copy `templates/master-reference-template.md` to the user's chosen master reference path.
-7. Tell the user:
-   - "Your config and master reference template have been created."
-   - "Before running your first application, fill in your master reference with your career history, STAR projects, and skills."
-   - "Look at `templates/example-master-reference.md` for a detailed example of what a good master reference looks like."
-8. **STOP.** Do not proceed to the job application workflow until the master reference is filled in.
+4. **Seed from existing documents:** Ask: "Do you have existing resumes or cover letters you'd like to use as a starting point? Provide the file paths (drag and drop works) and I'll extract your career history, skills, and achievements automatically."
+
+   **If the user provides files:**
+   a. Copy `templates/master-reference-template.md` to the user's chosen master reference path.
+   b. Read the agent prompt from `.claude/commands/agents/reference-seeder.md`
+   c. Spawn the reference seeder agent, passing: the file paths, the master reference template path, the master reference file path, and the user's personal info.
+   d. The agent populates the master reference and returns config suggestions (identity framing, writing style preferences, preferred phrases, employer consolidation rules).
+   e. Present the config suggestions to the user for review and editing.
+   f. Create `config.md` using the approved suggestions plus the user's personal info and defaults from the example.
+   g. Tell the user: "Your master reference has been populated from your existing documents. Review it at [path] and make any corrections before your first application."
+   h. The user may now proceed to a job application or review their master reference first. Do NOT stop.
+
+   **If the user declines or has no documents:**
+   a. Ask for their identity framing: "In 1-2 sentences, how would you describe yourself professionally? This anchors every cover letter and resume headline."
+   b. Create `config.md` populated with the user's answers and defaults from the example.
+   c. Copy `templates/master-reference-template.md` to the user's chosen master reference path.
+   d. Tell the user:
+      - "Your config and master reference template have been created."
+      - "Before running your first application, fill in your master reference with your career history, STAR projects, and skills."
+      - "Look at `templates/example-master-reference.md` for a detailed example."
+   e. **STOP.** Do not proceed until the master reference is filled in.
 
 ### If `config.md` exists:
 

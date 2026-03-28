@@ -36,10 +36,11 @@ claude
 
 On first run, the onboarding flow will:
 - Ask for your name, contact info, and LinkedIn URL
-- Create your `config.md` with preferences and styling defaults
-- Create a blank master reference template
+- Offer to seed your master reference from existing resumes/cover letters (drag and drop file paths)
+- If you provide documents: automatically extract your career history, STAR projects, skills, and writing preferences
+- If you don't have documents: create a blank template for you to fill in manually
 
-**Before your first application**, fill in your master reference with your career history, STAR projects, and skills. See `templates/example-master-reference.md` for a detailed example.
+See `templates/example-master-reference.md` for what a completed master reference looks like.
 
 Then run `/job-search` again and either paste a job description or provide a URL to the job posting. The scraper automatically extracts JD content from most job board URLs (Greenhouse, Lever, Workday, etc.).
 
