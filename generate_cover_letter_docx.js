@@ -63,37 +63,43 @@ function makeRun(text, opts = {}) {
 }
 
 // Parse the markdown
-// Expected structure:
-//   # Name
-//   contact | info | line
-//   ---
-//   body paragraphs...
+// Supports two structures:
+//   Structure A: # Title / contact | line / --- / body paragraphs
+//   Structure B: # Title / body paragraphs / name / contact | line (at end)
 
 let i = 0;
 let contactLine = null;
 let bodyParagraphs = [];
 let foundHR = false;
-let foundName = false;
+let foundTitle = false;
+let inBody = false;
 
 while (i < lines.length) {
   const line = lines[i].trim();
 
-  // # Name
-  if (/^# /.test(line) && !foundName) {
-    foundName = true;
+  // Skip ## subtitle lines
+  if (/^## /.test(line)) {
     i++;
     continue;
   }
 
-  // Horizontal rule
+  // # Title line
+  if (/^# /.test(line) && !foundTitle) {
+    foundTitle = true;
+    i++;
+    continue;
+  }
+
+  // Horizontal rule — marks transition to body (Structure A)
   if (/^---+$/.test(line)) {
     foundHR = true;
+    inBody = true;
     i++;
     continue;
   }
 
-  // Contact line (pipe-separated, before HR)
-  if (!foundHR && line.includes("|") && !line.startsWith("#")) {
+  // Contact line (pipe-separated): could be before HR or at end of file
+  if (line.includes("|") && !line.startsWith("#")) {
     contactLine = line;
     i++;
     continue;
@@ -101,12 +107,24 @@ while (i < lines.length) {
 
   // Skip empty lines
   if (line === "") {
+    // If we've seen the title but no HR, the first non-empty line starts the body
+    if (foundTitle && !foundHR && !inBody) {
+      // just skip empties until we hit content
+    }
     i++;
     continue;
   }
 
-  // Everything after HR is body
-  if (foundHR && line !== "") {
+  // If we found the title and this is a non-empty, non-special line, it's body
+  if (foundTitle && line !== "") {
+    inBody = true;
+    // Skip lines that are just the user's name at the end (signature line)
+    // Heuristic: 1-3 words, no period, near end of file
+    const remainingLines = lines.slice(i + 1).filter((l) => l.trim() !== "");
+    if (remainingLines.length <= 1 && line.split(" ").length <= 4 && !line.includes(".")) {
+      i++;
+      continue;
+    }
     bodyParagraphs.push(line);
   }
 
