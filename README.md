@@ -4,24 +4,26 @@ An AI-powered job application toolkit built on [Claude Code](https://docs.anthro
 
 ## What It Does
 
-1. **Analyzes** the job description for ATS keywords and researches the company
-2. **Interviews** you with two focused questions to find your angle
-3. **Writes** a tailored cover letter and resume through 5 progressive iterations each
-4. **Generates** an ATS-clean DOCX ready for upload
-5. **Reviews** the resume against ATS parsing rules and keyword coverage
-6. **Updates** your master reference with new framings for future applications
+1. **Creates** an application folder and saves the JD immediately
+2. **Analyzes** the job description for ATS keywords and researches the company (in parallel)
+3. **Interviews** you with two focused questions to find your angle
+4. **Develops** a narrative strategy with a voice brief for consistent tone across documents
+5. **Writes** a tailored cover letter and resume in parallel through configurable progressive iterations
+6. **Reviews** the resume against ATS parsing rules and keyword coverage
+7. **Updates** your master reference with new framings for future applications
+8. **Generates** ATS-clean DOCX files for both resume and cover letter after you approve the drafts
 
 ## Prerequisites
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed and configured
-- Node.js 18+ (for DOCX generation)
+- Node.js 18+ (for DOCX generation and JD scraping)
 - Python 3 (optional, for the standalone ATS scan script)
 
 ## Quick Start
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/yourusername/job-search-cli.git
+git clone https://github.com/BeckJam/job-search-cli.git
 cd job-search-cli
 
 # 2. Install dependencies
@@ -56,25 +58,26 @@ Phase 0: Config check (first-run onboarding if needed)
 Phase 1: Load master reference
     |
     v
-URL detection: If URL provided, scrape JD text automatically
+Phase 2: Create application folder + save JD
+         (URL detection and scraping if needed)
     |
     v
-Phase 2: ATS keyword analysis + company research (parallel)
+Phase 3: ATS keyword analysis + company research (parallel)
     |
     v
-Phase 3: Two-question interview + narrative strategy
+Phase 4: Two-question interview + narrative strategy + voice brief
     |
     v
-Phase 4: Create application folder (YYYY-MM-DD_Company_Role/)
+Phase 5: Cover letter + resume writing (parallel, voice brief keeps them consistent)
     |
     v
-Phase 5: Cover letter -> Resume -> DOCX -> ATS review (sequential)
+Phase 6: ATS review + master reference update (parallel)
     |
     v
-Phase 6: Update master reference with new framings
+Phase 7: Review with you, apply any edits
     |
     v
-Phase 7: Review with you
+Phase 8: DOCX generation (resume + cover letter, after your approval)
 ```
 
 The orchestrator (`.claude/commands/job-search.md`) handles interactive steps and spawns focused sub-agents for writing and research. Each sub-agent receives only the context it needs, which produces better output than dumping the full conversation.
@@ -91,6 +94,7 @@ All personal settings live in `config.md` (gitignored, created from `config.exam
 | Standing Preferences | Writing rules applied to every document |
 | Banned/Preferred Phrases | Term substitutions and blacklist |
 | Employer Consolidation Rules | How multi-title tenures are presented |
+| Writing Agent Settings | Number of progressive iterations (default: 3) |
 | DOCX Styling | Accent color, font, margins |
 
 ## Master Reference
@@ -111,7 +115,7 @@ The more detail you provide, the better your tailored documents will be. See `te
 
 Beyond the main application workflow, you can ask for:
 
-- **Cover Letter DOCX**: "Generate a DOCX for the cover letter"
+- **DOCX Generation**: "Generate DOCX files for this application"
 - **Compensation Research**: "What does this role pay?"
 - **Workday Formatter**: "Format the resume for Workday fields"
 
@@ -155,13 +159,15 @@ job-search-cli/
 │       ├── cover-letter-writer.md
 │       ├── docx-producer.md
 │       ├── master-reference-updater.md
+│       ├── reference-seeder.md
 │       ├── resume-writer.md
 │       └── workday-formatter.md
 ├── templates/
 │   ├── master-reference-template.md   # Blank template
 │   └── example-master-reference.md    # Filled-in example
 ├── scripts/
-│   └── ats_scan.py
+│   ├── scrape-jd.js                   # JD URL scraper
+│   └── ats_scan.py                    # Standalone ATS scanner
 ├── config.example.md                  # Config template
 ├── generate_resume_docx.js            # Standalone DOCX tool
 ├── CLAUDE.md
@@ -175,4 +181,4 @@ Contributions welcome! Please open an issue or pull request.
 
 ## License
 
-MIT
+CC BY-NC-SA 4.0 — See [LICENSE](LICENSE) for details.
