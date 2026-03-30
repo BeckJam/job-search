@@ -61,6 +61,12 @@ A customer-focused technology leader who builds scalable platforms and leads hig
 <!-- Example: -->
 <!-- - **Acme Corp**: Consolidate as one entry with titles: Engineer, Senior Engineer, Staff Engineer (Jan 2018 - Dec 2023) -->
 
+## Writing Agent Settings
+
+- **Writing Iterations**: 3
+
+<!-- Number of progressive iterations each writing agent (cover letter, resume) performs. Default is 3. Higher values produce more polished output but take longer. Range: 2-5. -->
+
 ## DOCX Styling
 
 - **Accent Color**: #1B3A5C

@@ -89,7 +89,11 @@ When passing context to writing agents, always include:
 
 When the user provides a new job description (or a URL to one), follow these phases in order.
 
-### URL Detection
+### Phase 2: Folder Creation + JD Capture
+
+**This is always the first action after receiving a JD.** Before any analysis or interaction.
+
+#### URL Detection
 
 If the user provides a URL instead of (or along with) job description text:
 
@@ -99,7 +103,24 @@ If the user provides a URL instead of (or along with) job description text:
 4. If the user confirms, use the extracted text as the job description for all subsequent phases
 5. If scraping fails (network error, login-walled page, no readable content), ask the user to paste the JD text manually
 
-### Phase 2: Parallel Analysis
+#### Create the Application Folder
+
+Once you have the JD text (from paste or confirmed scrape), immediately:
+
+1. Create the application folder in the current working directory:
+   ```
+   YYYY-MM-DD_Company-Name_Job-Title/
+   ```
+   Rules:
+   - Use today's date
+   - Sanitize company name and job title: spaces become hyphens, remove special characters
+   - Example: `2026-03-26_Acme-Corp_Senior-Software-Engineer`
+
+2. Save the full job description text as `jd.txt` in the application folder. If a URL was provided, include it as the first line of the file followed by a blank line, then the full JD text.
+
+This folder is now the working directory for this application. All subsequent outputs go here.
+
+### Phase 3: Parallel Analysis
 
 Spawn two agents **simultaneously** using the Agent tool:
 
@@ -117,7 +138,7 @@ Spawn two agents **simultaneously** using the Agent tool:
 
 Launch both agents in a single response using two Agent tool calls. Wait for both to return before proceeding.
 
-### Phase 3: Interactive Discovery (in main conversation)
+### Phase 4: Interactive Discovery (in main conversation)
 
 With both agent results in hand:
 
@@ -138,80 +159,90 @@ Wait for the user's answers before proceeding. These two questions are all that'
 - Which new assets from the interview should be front and center?
 - What proven narrative framings from the master reference apply?
 
-Present the narrative strategy and get the user's input before writing. This narrative strategy becomes the **focus guide** passed to writing agents.
+**Voice Brief**: As part of the narrative strategy, define a **voice brief** that both writing agents will follow. The voice brief specifies:
+- **Tone**: e.g., confident and warm, technically authoritative, mission-driven
+- **Register**: e.g., executive peer-to-peer, senior IC to hiring manager, leader-to-leader
+- **Storytelling approach**: e.g., lead with transformation narrative, lead with technical depth, lead with scale/impact
+- **Key phrases/language**: specific terms or phrasings that should thread through both documents for consistency
 
-### Phase 4: Folder Creation
+Present the narrative strategy (including voice brief) and get the user's input before writing. This becomes the **focus guide** passed to both writing agents.
 
-Create the application folder in the current working directory:
+### Phase 5: Document Generation (Parallel)
 
-```
-YYYY-MM-DD_Company-Name_Job-Title/
-```
+Spawn both writing agents **simultaneously** using two Agent tool calls. The voice brief ensures consistent voice across both documents without requiring sequential execution.
 
-Rules:
-- Use today's date
-- Sanitize company name and job title: spaces become hyphens, remove special characters
-- Example: `2026-03-26_Acme-Corp_Senior-Software-Engineer`
-
-After creating the folder, save the full job description text as `jd.txt` in the application folder. This preserves the original JD for future reference.
-
-### Phase 5: Document Generation (Sequential)
-
-Spawn writing agents **sequentially** (cover letter first, then resume). The cover letter establishes narrative voice; the resume follows.
+Read the **Writing Iterations** count from `config.md` (default: 3). Pass this count to both agents.
 
 **Agent 3: Cover Letter Writer**
 - Read the prompt from `.claude/commands/agents/cover-letter-writer.md`
 - Pass to the agent:
   - Master reference file path (agent will Read it)
-  - The focus guide / narrative strategy from Step D
+  - The focus guide / narrative strategy from Step D (including voice brief)
   - New assets from the interview
   - ATS keywords from Step A
-  - Company research summary from Step C
+  - Company research summary
   - Full job description text
   - Application folder path for saving `cover-letter.md`
   - All config values: standing preferences, banned/preferred phrases, identity framing, personal info
+  - Writing iterations count from config
 - Agent returns: final cover letter saved to folder
 
-**Agent 4: Resume Writer** (after cover letter completes)
+**Agent 4: Resume Writer**
 - Read the prompt from `.claude/commands/agents/resume-writer.md`
 - Pass to the agent:
   - Master reference file path (agent will Read it)
-  - The focus guide / narrative strategy from Step D
+  - The focus guide / narrative strategy from Step D (including voice brief)
   - New assets from the interview
   - ATS keywords from Step A
-  - Company research summary from Step C
+  - Company research summary
   - Full job description text
   - Application folder path for saving `resume.md`
   - All config values: standing preferences, banned/preferred phrases, employer consolidation rules, identity framing, personal info
+  - Writing iterations count from config
 - Agent returns: final resume saved to folder
 
-**Agent 5: DOCX Producer** (after resume completes)
-- Read the prompt from `.claude/commands/agents/docx-producer.md`
-- Pass: file path to the saved `resume.md`, application folder path, company name and role title, user's name from config, DOCX styling values from config
-- Agent produces ATS-optimized resume DOCX in the application folder
-- Report the DOCX file path in Phase 7 review
+Launch both agents in a single response. Wait for both to return before proceeding.
 
-**Agent 6: ATS Review** (after DOCX producer completes)
+### Phase 6: Post-Writing (Parallel)
+
+After both documents are complete, spawn these agents **simultaneously**:
+
+**Agent 5: ATS Review**
 - Read the prompt from `.claude/commands/agents/ats-review.md`
-- Pass: resume file path, full job description text, ATS keyword analysis from Step A, and screening questions if available
-- Agent returns: parse simulation, red flags, keyword coverage score, screening question check, and top 3 recommended changes
-- Present results in Phase 7 review. If critical red flags or low keyword coverage, flag for the user's attention before finalizing.
+- Pass: resume file path, full job description text, ATS keyword analysis from Phase 3, and screening questions if available
+- Agent returns: parse simulation, red flags, keyword coverage score, and top 3 recommended changes
 
-### Phase 6: Master Reference Update
-
-After both documents are complete, spawn the master reference updater agent:
-
+**Agent 6: Master Reference Update**
 - Read the prompt from `.claude/commands/agents/master-reference-updater.md`
 - Pass: master reference file path (from config), new assets, new framings, application tracker row data (date, company, role, status, folder path)
 
-### Phase 7: Review with User
+Launch both agents in a single response.
+
+### Phase 7: Review and Approval
 
 Present a summary of what was created:
 - Cover letter highlights (centerpiece story, key evidence used)
 - Resume highlights (summary framing, leading bullets)
-- DOCX resume file path (ready for ATS upload)
+- ATS review results: keyword coverage score and any red flags or recommended changes
 - What was added to the master reference
-- Offer to generate cover letter DOCX if needed
+
+If the ATS review flagged critical issues (red flags or low keyword coverage), highlight them and offer to revise the resume before proceeding.
+
+**Ask for approval**: "Review the cover letter and resume in the application folder. Let me know if you'd like any changes, or say 'approved' to generate the final DOCX files."
+
+### Phase 8: DOCX Production (on approval only)
+
+**DOCX files are only generated after the user explicitly approves the markdown documents.** Do not generate DOCX at any earlier stage.
+
+Once the user approves:
+
+Spawn the DOCX producer agent to generate **both** resume and cover letter DOCX files:
+
+- Read the prompt from `.claude/commands/agents/docx-producer.md`
+- **Resume DOCX**: Pass file path to `resume.md`, application folder path, company name and role title, user's name from config, DOCX styling values from config
+- **Cover Letter DOCX**: Pass file path to `cover-letter.md`, application folder path, company name and role title, user's name from config, DOCX styling values from config
+
+Report both DOCX file paths to the user. These are the final ATS-ready deliverables.
 
 ---
 
@@ -219,11 +250,11 @@ Present a summary of what was created:
 
 These are triggered by specific requests, not part of the standard workflow.
 
-### Cover Letter DOCX Production
+### DOCX Production
 
-Resume DOCX is generated automatically in Phase 5. When the user requests a cover letter DOCX:
+When the user requests DOCX generation for any document outside the standard workflow:
 - Read the prompt from `.claude/commands/agents/docx-producer.md`
-- Pass: file path to cover-letter.md, application folder path, company name and role title, user's name from config, DOCX styling from config
+- Pass: file path to the markdown source, application folder path, company name and role title, user's name from config, DOCX styling from config
 
 ### Compensation Research
 

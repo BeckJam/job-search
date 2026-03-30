@@ -13,7 +13,7 @@ The `/job-search` skill uses an orchestrator + sub-agent pattern:
 
 **Why sub-agents?** Writing agents (cover letter, resume) receive only the context they need (master reference + focus guide + JD + keywords) instead of the full conversation history. This eliminates ~15-30KB of conversation noise and improves writing quality.
 
-**Parallelism:** ATS keyword analysis and company research run in parallel. Cover letter then resume run sequentially (cover letter establishes narrative voice).
+**Parallelism:** Three parallel stages: (1) ATS keyword analysis + company research, (2) cover letter + resume writing (voice brief ensures consistency), (3) ATS review + master reference update. DOCX is only generated after user approves the markdown drafts.
 
 ## Configuration
 
@@ -25,4 +25,4 @@ Each application gets its own folder in this directory:
 ```
 YYYY-MM-DD_Company-Name_Job-Title/
 ```
-Contains `resume.md` and `cover-letter.md` by default. DOCX generated automatically for resumes.
+Contains `jd.txt`, `resume.md`, and `cover-letter.md`. DOCX files generated only after user approval.
