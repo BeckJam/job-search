@@ -129,13 +129,17 @@ node scripts/scrape-jd.js "https://boards.greenhouse.io/company/jobs/12345"
 
 Extracts job description text from a URL using Mozilla's Readability algorithm (the same one behind Firefox Reader View). Works with most job boards: Greenhouse, Lever, Workday, company career pages, etc. Pages that require JavaScript rendering or login may not work.
 
-### DOCX Generator
+### DOCX Generators
 
 ```bash
-node generate_resume_docx.js <input.md> <output.docx>
+# Resume
+node generate_resume_docx.js <input.md> <output.docx> '[optionsJson]'
+
+# Cover Letter
+node generate_cover_letter_docx.js <input.md> <output.docx> '[optionsJson]'
 ```
 
-Converts a markdown resume into a DOCX using the project's formatting conventions. Useful as a manual fallback.
+Both scripts accept an optional JSON string for styling: `accentColor`, `font`, `fontFallback`, `margins`. The cover letter script also accepts `userName` and `role`. The DOCX producer agent calls these automatically, but they work as standalone tools too.
 
 ### ATS Scanner
 
@@ -169,7 +173,8 @@ job-search-cli/
 │   ├── scrape-jd.js                   # JD URL scraper
 │   └── ats_scan.py                    # Standalone ATS scanner
 ├── config.example.md                  # Config template
-├── generate_resume_docx.js            # Standalone DOCX tool
+├── generate_resume_docx.js            # Resume DOCX generator
+├── generate_cover_letter_docx.js      # Cover letter DOCX generator
 ├── CLAUDE.md
 ├── package.json
 └── README.md
