@@ -2,7 +2,7 @@
   "name": "job-search-cli",
   "version": "1.0.0",
   "description": "AI-powered job application toolkit built on Claude Code. Generates tailored resumes, cover letters, and DOCX files from a master reference document.",
-  "license": "MIT",
+  "license": "CC-BY-NC-SA-4.0",
   "keywords": [
     "job-search",
     "resume",
