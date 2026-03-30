@@ -36,7 +36,7 @@ You'll need an Anthropic API key or a Claude Pro/Max subscription. See the [Clau
 ### 2. Clone and install
 
 ```bash
-git clone https://github.com/BeckJam/job-search-cli.git
+git clone https://github.com/BeckJam/job-search.git
 cd job-search-cli
 npm install
 ```
