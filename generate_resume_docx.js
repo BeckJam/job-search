@@ -4,7 +4,13 @@
  * Standalone resume DOCX generator.
  * Converts a markdown resume (using the project's formatting conventions) into an ATS-friendly DOCX.
  *
- * Usage: node generate_resume_docx.js <input.md> <output.docx>
+ * Usage: node generate_resume_docx.js <input.md> <output.docx> [optionsJson]
+ *
+ * Options (as JSON string in argv[4]):
+ *   accentColor  - Hex color for name/headers (default: "#1B3A5C")
+ *   font         - Primary font (default: "Aptos")
+ *   fontFallback - Fallback font (default: "Calibri")
+ *   margins      - Margins in inches (default: 0.7)
  */
 
 const fs = require("fs");
@@ -23,10 +29,15 @@ const {
 
 const inputPath = process.argv[2];
 const outputPath = process.argv[3];
+const optionsJson = process.argv[4] || "{}";
 
 if (!inputPath || !outputPath) {
-  console.error("Usage: node generate_resume_docx.js <input.md> <output.docx>");
-  console.error("Example: node generate_resume_docx.js ./resume.md ./resume.docx");
+  console.error(
+    "Usage: node generate_resume_docx.js <input.md> <output.docx> [optionsJson]"
+  );
+  console.error(
+    'Example: node generate_resume_docx.js ./resume.md ./resume.docx \'{"accentColor":"#1B3A5C"}\''
+  );
   process.exit(1);
 }
 
@@ -35,31 +46,33 @@ if (!fs.existsSync(inputPath)) {
   process.exit(1);
 }
 
-const src = fs.readFileSync(inputPath, "utf-8");
-const lines = src.split("\n");
+const options = JSON.parse(optionsJson);
+const ACCENT_COLOR = (options.accentColor || "#1B3A5C").replace("#", "");
+const FONT = options.font || "Aptos";
+const FONT_FALLBACK = options.fontFallback || "Calibri";
+const MARGIN_INCHES = options.margins || 0.7;
 
-// Page width in twips: 12240 total, minus 2 * 0.7" margins = 12240 - 2016 = 10224 usable
 const PAGE_WIDTH_TWIP = 12240;
-const MARGIN = convertInchesToTwip(0.7);
+const MARGIN = convertInchesToTwip(MARGIN_INCHES);
 const USABLE = PAGE_WIDTH_TWIP - 2 * MARGIN;
 
-const FONT = "Calibri";
-const SPACING = { after: 40, line: 240 }; // 2pt after, single line spacing (240 = single)
+const src = fs.readFileSync(inputPath, "utf-8");
+const lines = src.split("\n");
 
 const children = [];
 
 function makeRun(text, opts = {}) {
   return new TextRun({
     text,
-    font: FONT,
+    font: { name: FONT, fallback: FONT_FALLBACK },
     size: (opts.size || 10.5) * 2, // half-points
     bold: opts.bold || false,
     italics: opts.italics || false,
+    color: opts.color || "000000",
   });
 }
 
 function parseBoldSegments(text, baseSize) {
-  // Parse **bold** segments mixed with regular text
   const runs = [];
   const regex = /\*\*(.+?)\*\*/g;
   let last = 0;
@@ -78,6 +91,9 @@ function parseBoldSegments(text, baseSize) {
 }
 
 let i = 0;
+let isFirstH1 = true;
+let isFirstPipeLine = true;
+
 while (i < lines.length) {
   const line = lines[i].trim();
 
@@ -93,41 +109,46 @@ while (i < lines.length) {
     continue;
   }
 
-  // # Name (H1)
+  // # Name (H1) — 18pt bold, centered, accent color
   if (/^# /.test(line)) {
     const name = line.replace(/^# /, "");
     children.push(
       new Paragraph({
         alignment: AlignmentType.CENTER,
-        spacing: { after: 40, line: 240 },
-        children: [makeRun(name, { size: 16, bold: true })],
+        spacing: { after: 0, line: 240 },
+        children: [
+          makeRun(name, { size: 18, bold: true, color: ACCENT_COLOR }),
+        ],
       })
     );
+    isFirstH1 = false;
     i++;
     continue;
   }
 
-  // ## Section headers
+  // ## Section headers — 12pt bold, ALL CAPS, accent color, bottom border
   if (/^## /.test(line)) {
     const header = line.replace(/^## /, "").toUpperCase();
     children.push(
       new Paragraph({
-        spacing: { before: 120, after: 40, line: 240 },
+        spacing: { before: 200, after: 80, line: 240 },
         border: {
           bottom: {
             style: BorderStyle.SINGLE,
-            size: 1, // 0.5pt = 1 half-pt
-            color: "999999",
+            size: 2,
+            color: ACCENT_COLOR,
           },
         },
-        children: [makeRun(header, { size: 12, bold: true })],
+        children: [
+          makeRun(header, { size: 12, bold: true, color: ACCENT_COLOR }),
+        ],
       })
     );
     i++;
     continue;
   }
 
-  // ### Company | Location | Dates
+  // ### Company | Location | Dates — 11pt bold, dates right-aligned
   if (/^### /.test(line)) {
     const content = line.replace(/^### /, "");
     const parts = content.split("|").map((s) => s.trim());
@@ -138,7 +159,7 @@ while (i < lines.length) {
 
     children.push(
       new Paragraph({
-        spacing: { after: 20, line: 240 },
+        spacing: { before: 120, after: 20, line: 240 },
         tabStops: [
           {
             type: TabStopType.RIGHT,
@@ -147,7 +168,10 @@ while (i < lines.length) {
         ],
         children: [
           makeRun(leftText, { size: 11, bold: true }),
-          new TextRun({ text: "\t", font: FONT }),
+          new TextRun({
+            text: "\t",
+            font: { name: FONT, fallback: FONT_FALLBACK },
+          }),
           makeRun(dates, { size: 11, bold: true }),
         ],
       })
@@ -156,7 +180,7 @@ while (i < lines.length) {
     continue;
   }
 
-  // **Job Title** lines (bold italic)
+  // **Job Title** lines — 10.5pt bold italic
   if (/^\*\*(.+)\*\*$/.test(line)) {
     const title = line.replace(/^\*\*/, "").replace(/\*\*$/, "");
     children.push(
@@ -184,13 +208,34 @@ while (i < lines.length) {
     continue;
   }
 
-  // Contact line (pipes, no heading prefix)
+  // Contact line (first pipe-separated line after name) — 10pt centered, accent bottom border
+  if (line.includes("|") && !line.startsWith("#") && isFirstPipeLine) {
+    isFirstPipeLine = false;
+    children.push(
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 0, line: 240 },
+        border: {
+          bottom: {
+            style: BorderStyle.SINGLE,
+            size: 2,
+            color: ACCENT_COLOR,
+          },
+        },
+        children: [makeRun(line, { size: 10 })],
+      })
+    );
+    i++;
+    continue;
+  }
+
+  // Headline line (pipe-separated, after contact) — 11pt italic centered
   if (line.includes("|") && !line.startsWith("#")) {
     children.push(
       new Paragraph({
         alignment: AlignmentType.CENTER,
         spacing: { after: 40, line: 240 },
-        children: [makeRun(line, { size: 10.5 })],
+        children: [makeRun(line, { size: 11, italics: true })],
       })
     );
     i++;
@@ -227,7 +272,7 @@ const doc = new Document({
                 },
               },
               run: {
-                font: FONT,
+                font: { name: FONT, fallback: FONT_FALLBACK },
               },
             },
           },
@@ -258,6 +303,6 @@ const doc = new Document({
 
 Packer.toBuffer(doc).then((buffer) => {
   fs.writeFileSync(outputPath, buffer);
-  console.log("DOCX written to:", outputPath);
+  console.log("Resume DOCX written to:", outputPath);
   console.log("Size:", buffer.length, "bytes");
 });
