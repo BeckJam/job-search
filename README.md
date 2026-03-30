@@ -1,6 +1,8 @@
 # Job Search CLI
 
-An AI-powered job application toolkit built on [Claude Code](https://docs.anthropic.com/en/docs/claude-code). Paste a job description and get a tailored resume, cover letter, and ATS-optimized DOCX, all generated from your career master reference document.
+An AI-powered job application toolkit built as a [Claude Code](https://docs.anthropic.com/en/docs/claude-code) slash command. Paste a job description and get a tailored resume, cover letter, and ATS-optimized DOCX, all generated from your career master reference document.
+
+Built for Claude Code, but the architecture (orchestrator + sub-agent prompts in markdown) could be adapted for [OpenClaw](https://github.com/AiCodingBattle/openclaw) or any agent framework that supports multi-agent orchestration.
 
 ## What It Does
 
@@ -15,24 +17,41 @@ An AI-powered job application toolkit built on [Claude Code](https://docs.anthro
 
 ## Prerequisites
 
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed and configured
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed and configured (see [installation guide](https://docs.anthropic.com/en/docs/claude-code/getting-started))
 - Node.js 18+ (for DOCX generation and JD scraping)
 - Python 3 (optional, for the standalone ATS scan script)
 
-## Quick Start
+## Installation
+
+### 1. Install Claude Code
+
+If you don't have Claude Code yet:
 
 ```bash
-# 1. Clone the repository
+npm install -g @anthropic-ai/claude-code
+```
+
+You'll need an Anthropic API key or a Claude Pro/Max subscription. See the [Claude Code docs](https://docs.anthropic.com/en/docs/claude-code/getting-started) for full setup instructions.
+
+### 2. Clone and install
+
+```bash
 git clone https://github.com/BeckJam/job-search-cli.git
 cd job-search-cli
-
-# 2. Install dependencies
 npm install
+```
 
-# 3. Open Claude Code
+### 3. Launch Claude Code from the project directory
+
+```bash
 claude
+```
 
-# 4. Run the skill
+This is important: Claude Code reads the `.claude/commands/` directory to register slash commands. You must launch it from the project root.
+
+### 4. Run the slash command
+
+```
 /job-search
 ```
 
@@ -44,9 +63,13 @@ On first run, the onboarding flow will:
 
 See `templates/example-master-reference.md` for what a completed master reference looks like.
 
-Then run `/job-search` again and either paste a job description or provide a URL to the job posting. The scraper automatically extracts JD content from most job board URLs (Greenhouse, Lever, Workday, etc.).
+### 5. Apply for a job
+
+Run `/job-search` again and either paste a job description or provide a URL to the job posting. The scraper automatically extracts JD content from most job board URLs (Greenhouse, Lever, Workday, etc.).
 
 ## How It Works
+
+This is a Claude Code [slash command](https://docs.anthropic.com/en/docs/claude-code/slash-commands) that uses an orchestrator + sub-agent architecture. The orchestrator lives at `.claude/commands/job-search.md` and handles interactive steps (interviews, approvals). It spawns focused sub-agents from `.claude/commands/agents/` for writing and research. Each sub-agent receives only the context it needs, which produces better output than dumping the full conversation.
 
 ```
 /job-search
@@ -79,8 +102,6 @@ Phase 7: Review with you, apply any edits
     v
 Phase 8: DOCX generation (resume + cover letter, after your approval)
 ```
-
-The orchestrator (`.claude/commands/job-search.md`) handles interactive steps and spawns focused sub-agents for writing and research. Each sub-agent receives only the context it needs, which produces better output than dumping the full conversation.
 
 ## Configuration
 
