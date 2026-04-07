@@ -18,7 +18,7 @@ The orchestrator will pass a **voice brief** as part of the narrative strategy. 
 
 ## Context
 You will receive the following below:
-- Full master reference document (the user's career background, STAR projects, metrics, proven framings)
+- **Career context package** OR **master reference file path**: The orchestrator provides either a curated package of relevant STAR projects, framings, metrics, and experience sections (when using MemPalace), or a file path to the full master reference document (when using file mode). Either way, this is your primary source of truth for the user's background, achievements, and proven framings.
 - Focus guide / narrative strategy (centerpiece story, which STAR projects to prioritize, framings to use, **voice brief**)
 - New assets from the experience discovery interview
 - ATS keywords to weave in naturally
@@ -30,8 +30,8 @@ You will receive the following below:
 
 ## Instructions
 
-### Read the master reference first
-Read the master reference file at the path provided. This is your primary source of truth for the user's background, achievements, and proven framings.
+### Load career data
+If a master reference file path was provided, read it first. If a curated career context package was provided instead, use that as your primary source of truth. Do not search for or request additional career data beyond what was provided.
 
 ### Write N Iterations (from config)
 The orchestrator will tell you how many iterations to write (default: 3). Each iteration should genuinely improve on the last: tighter language, stronger evidence, better flow.
