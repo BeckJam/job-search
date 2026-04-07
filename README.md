@@ -1,6 +1,8 @@
 # Job Search CLI
 
-An AI-powered job application toolkit built as a [Claude Code](https://docs.anthropic.com/en/docs/claude-code) slash command. Paste a job description and get a tailored resume, cover letter, and ATS-optimized DOCX, all generated from your career master reference document.
+An AI-powered job application toolkit built as a [Claude Code](https://docs.anthropic.com/en/docs/claude-code) slash command. Paste a job description (or a URL) and get a tailored resume, cover letter, and ATS-optimized DOCX, all generated from your career data.
+
+Supports two memory modes: **file mode** (default) reads your career data from a master reference markdown file, or **MemPalace mode** (optional) uses semantic search to load only the career data relevant to each application. See [MemPalace setup](docs/mempalace-setup.md) for details.
 
 Built for Claude Code, but the architecture (orchestrator + sub-agent prompts in markdown) could be adapted for [OpenClaw](https://github.com/AiCodingBattle/openclaw) or any agent framework that supports multi-agent orchestration.
 
@@ -19,7 +21,8 @@ Built for Claude Code, but the architecture (orchestrator + sub-agent prompts in
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed and configured (see [installation guide](https://docs.anthropic.com/en/docs/claude-code/getting-started))
 - Node.js 18+ (for DOCX generation and JD scraping)
-- Python 3 (optional, for the standalone ATS scan script)
+- Python 3 (optional, for the standalone ATS scan script and MemPalace migration)
+- [MemPalace](https://github.com/anthropics/mempalace) (optional, for semantic memory mode; `pip install mempalace`)
 
 ## Installation
 
@@ -37,7 +40,7 @@ You'll need an Anthropic API key or a Claude Pro/Max subscription. See the [Clau
 
 ```bash
 git clone https://github.com/BeckJam/job-search.git
-cd job-search-cli
+cd job-search
 npm install
 ```
 
@@ -75,10 +78,10 @@ This is a Claude Code [slash command](https://docs.anthropic.com/en/docs/claude-
 /job-search
     |
     v
-Phase 0: Config check (first-run onboarding if needed)
+Phase 0: Readiness check (MemPalace detection, onboarding if needed)
     |
     v
-Phase 1: Load master reference
+Phase 1: Memory ready (load identity context or master reference)
     |
     v
 Phase 2: Create application folder + save JD
@@ -94,7 +97,7 @@ Phase 4: Two-question interview + narrative strategy + voice brief
 Phase 5: Cover letter + resume writing (parallel, voice brief keeps them consistent)
     |
     v
-Phase 6: ATS review + master reference update (parallel)
+Phase 6: ATS review + memory update (parallel)
     |
     v
 Phase 7: Review with you, apply any edits
@@ -118,9 +121,11 @@ All personal settings live in `config.md` (gitignored, created from `config.exam
 | Writing Agent Settings | Number of progressive iterations (default: 3) |
 | DOCX Styling | Accent color, font, margins |
 
-## Master Reference
+## Career Data
 
-Your master reference is the single source of truth for all applications. It should include:
+### File Mode (default)
+
+Your master reference is a markdown file that serves as the single source of truth for all applications. It should include:
 
 - **Professional Summary**: Your core positioning (2-3 sentences)
 - **Career History**: Every role with achievements and metrics
@@ -131,6 +136,12 @@ Your master reference is the single source of truth for all applications. It sho
 - **Applications Tracker**: Auto-updated after each application
 
 The more detail you provide, the better your tailored documents will be. See `templates/example-master-reference.md` for what a filled-in master reference looks like.
+
+### MemPalace Mode (optional)
+
+With MemPalace enabled, career data is stored in a local semantic search database instead of a flat file. The orchestrator loads ~170 tokens of identity context at startup and retrieves relevant STAR projects, framings, and experience on-demand. Writing agents receive a curated context package (~2,000-4,000 tokens) instead of the full master reference (~17,000 tokens).
+
+MemPalace is detected automatically in Phase 0. If installed, the tool uses it; if not, it falls back to file mode. See [docs/mempalace-setup.md](docs/mempalace-setup.md) for installation and migration.
 
 ## On-Demand Tools
 
@@ -190,9 +201,12 @@ job-search-cli/
 ├── templates/
 │   ├── master-reference-template.md   # Blank template
 │   └── example-master-reference.md    # Filled-in example
+├── docs/
+│   └── mempalace-setup.md             # MemPalace setup and migration guide
 ├── scripts/
 │   ├── scrape-jd.js                   # JD URL scraper
-│   └── ats_scan.py                    # Standalone ATS scanner
+│   ├── ats_scan.py                    # Standalone ATS scanner
+│   └── migrate-to-mempalace.py        # Master reference to MemPalace migration
 ├── config.example.md                  # Config template
 ├── generate_resume_docx.js            # Resume DOCX generator
 ├── generate_cover_letter_docx.js      # Cover letter DOCX generator
