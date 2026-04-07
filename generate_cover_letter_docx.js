@@ -118,6 +118,16 @@ while (i < lines.length) {
   // If we found the title and this is a non-empty, non-special line, it's body
   if (foundTitle && line !== "") {
     inBody = true;
+    // Skip greeting lines — the script adds its own "Dear Hiring Manager,"
+    if (/^Dear\s+/i.test(line)) {
+      i++;
+      continue;
+    }
+    // Skip "Sincerely," or similar closings — the script adds its own
+    if (/^Sincerely/i.test(line)) {
+      i++;
+      continue;
+    }
     // Skip lines that are just the user's name at the end (signature line)
     // Heuristic: 1-3 words, no period, near end of file
     const remainingLines = lines.slice(i + 1).filter((l) => l.trim() !== "");

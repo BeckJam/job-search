@@ -23,5 +23,10 @@ Thumbs.db
 __pycache__/
 *.pyc
 
+# MemPalace data (personal career data)
+.mempalace/
+mempalace.yaml
+entities.json
+
 # Generated DOCX files outside application folders
 *.docx
